@@ -3,7 +3,8 @@ Vector-Shield Stage 1: Symbolic Topographic Anomaly Detector (LOF Interceptor)
 Lead Architect: Vignesh V S (cb.ai.u4aid23057)
 
 Implements real-time density-based outlier filtering on high-dimensional embedding tensors
-using Local Outlier Factor (LOF) with soft-margin decision boundaries and sub-2ms latency.
+using Local Outlier Factor (LOF) combined with Cosine Domain-Centroid Density Scaling.
+Sub-2ms execution latency.
 """
 
 import time
@@ -15,14 +16,15 @@ from sklearn.decomposition import PCA
 class VectorShieldLOFInterceptor:
     """
     Stage 1 Symbolic Interceptor for high-dimensional vector spaces.
-    
+
     Mathematical Formulation:
     1. Reachability Distance: rd_k(p, o) = max(k_distance(o), d(p, o))
     2. Local Reachability Density: lrd_k(p) = |N_k(p)| / sum_{o in N_k(p)} rd_k(p, o)
     3. Local Outlier Factor: LOF_k(p) = (1 / |N_k(p)|) * sum_{o in N_k(p)} (lrd_k(o) / lrd_k(p))
-    
+    4. Cosine Density Scaling: LOF_scaled(p) = LOF_k(p) * (cos_dist(p, c_clean) / mean_clean_dist)^density_exponent
+
     Soft-Margin Decision Rules:
-      - LOF <= safe_threshold (1.15)          -> 'SAFE' (Pass Direct to Context Window)
+      - LOF <= safe_threshold (1.40)          -> 'SAFE' (Pass Direct to Context Window)
       - safe_threshold < LOF < anom_threshold -> 'BORDERLINE' (Route to Stage 2 ModernBERT)
       - LOF >= anom_threshold (2.50)         -> 'QUARANTINE_ANOMALY' (Drop Vector & Self-Heal)
     """
@@ -30,19 +32,23 @@ class VectorShieldLOFInterceptor:
     def __init__(
         self,
         n_neighbors: int = 5,
-        safe_threshold: float = 1.25,
+        safe_threshold: float = 1.30,
         anomaly_threshold: float = 2.50,
         pca_dimensions: int = 16,
+        density_exponent: float = 1.2,
         metric: str = "minkowski"
     ):
         self.n_neighbors = n_neighbors
         self.safe_threshold = safe_threshold
         self.anomaly_threshold = anomaly_threshold
         self.pca_dimensions = pca_dimensions
+        self.density_exponent = density_exponent
         self.metric = metric
-        
+
         self.pca = None
         self.lof_model = None
+        self.clean_centroid = None
+        self.baseline_cosine_dist = 0.5
         self.is_fitted = False
 
     def fit(self, reference_vectors: np.ndarray):
@@ -52,7 +58,16 @@ class VectorShieldLOFInterceptor:
         """
         ref = np.asarray(reference_vectors, dtype=np.float32)
         n_samples, n_features = ref.shape
-        
+
+        # Compute clean baseline centroid for Cosine Density Scaling
+        ref_norms = ref / (np.linalg.norm(ref, axis=1, keepdims=True) + 1e-8)
+        self.clean_centroid = np.mean(ref_norms, axis=0)
+        self.clean_centroid /= (np.linalg.norm(self.clean_centroid) + 1e-8)
+
+        # Baseline mean cosine distance
+        clean_dists = [1.0 - np.dot(v, self.clean_centroid) for v in ref_norms]
+        self.baseline_cosine_dist = max(0.1, float(np.mean(clean_dists)))
+
         # Adaptive PCA dimensionality reduction to mitigate curse of dimensionality
         n_components = min(self.pca_dimensions, n_samples - 1, n_features)
         if n_components < n_features:
@@ -64,7 +79,7 @@ class VectorShieldLOFInterceptor:
 
         actual_k = min(self.n_neighbors, n_samples - 1)
         self.actual_k = max(2, actual_k)
-        
+
         self.lof_model = LocalOutlierFactor(
             n_neighbors=self.actual_k,
             novelty=True,
@@ -76,30 +91,37 @@ class VectorShieldLOFInterceptor:
     def score_vector(self, query_vector: np.ndarray) -> dict:
         """
         Scores a single query vector tensor in real-time (< 2ms).
-        Returns diagnostic dictionary with LOF score, classification, and latency.
+        Returns diagnostic dictionary with scaled LOF score, classification, and latency.
         """
         if not self.is_fitted:
             raise RuntimeError("Interceptor must be fitted on reference vectors before scoring.")
 
         vec = np.asarray(query_vector, dtype=np.float32).reshape(1, -1)
-        
-        # Ultra-fast timed inference
+        v_flat = query_vector.flatten()
+
         start_t = time.perf_counter()
         if self.pca is not None:
             vec_reduced = self.pca.transform(vec)
         else:
             vec_reduced = vec
 
-        # score_samples yields the opposite of LOF. -score_samples gives true LOF (inlier ~ 1.0)
+        # Raw LOF score from k-NN density
         raw_lof = -float(self.lof_model.score_samples(vec_reduced)[0])
+
+        # Cosine distance scaling relative to clean domain centroid
+        v_norm = v_flat / (np.linalg.norm(v_flat) + 1e-8)
+        cos_dist = 1.0 - float(np.dot(v_norm, self.clean_centroid))
+        density_multiplier = (cos_dist / self.baseline_cosine_dist) ** self.density_exponent
+        scaled_lof = float(raw_lof * density_multiplier)
+
         elapsed_ms = (time.perf_counter() - start_t) * 1000.0
 
         # Soft-margin decision boundary
-        if raw_lof <= self.safe_threshold:
+        if scaled_lof <= self.safe_threshold:
             status = "SAFE"
             action = "PASS_TO_LLM"
             recommendation = "Vector coordinates conform to verified knowledge cluster."
-        elif raw_lof < self.anomaly_threshold:
+        elif scaled_lof < self.anomaly_threshold:
             status = "BORDERLINE"
             action = "ROUTE_TO_STAGE2"
             recommendation = "Topographic density is ambiguous. Hand off to ModernBERT for semantic inspection."
@@ -109,40 +131,16 @@ class VectorShieldLOFInterceptor:
             recommendation = "Adversarial geometric outlier detected. Intercepted before context exposure."
 
         return {
-            "lof_score": round(raw_lof, 4),
+            "lof_score": round(scaled_lof, 4),
+            "raw_lof": round(raw_lof, 4),
+            "cosine_dist": round(cos_dist, 4),
             "status": status,
             "action": action,
             "recommendation": recommendation,
             "latency_ms": round(elapsed_ms, 3),
-            "is_outlier": bool(raw_lof >= self.anomaly_threshold)
+            "is_outlier": bool(scaled_lof >= self.anomaly_threshold)
         }
 
     def batch_evaluate(self, vectors: np.ndarray) -> list:
         """Evaluates a batch of vectors."""
         return [self.score_vector(v) for v in vectors]
-
-
-if __name__ == "__main__":
-    import json
-    with open("data/clean_corpus.jsonl", "r", encoding="utf-8") as f:
-        clean_docs = [json.loads(line) for line in f]
-    with open("data/garak_attack_payloads.jsonl", "r", encoding="utf-8") as f:
-        attack_docs = [json.loads(line) for line in f]
-        
-    clean_vecs = np.array([d["embedding"] for d in clean_docs])
-    interceptor = VectorShieldLOFInterceptor(n_neighbors=8, pca_dimensions=16)
-    interceptor.fit(clean_vecs)
-    
-    print("=" * 60)
-    print("VECTOR-SHIELD STAGE 1 (LOF INTERCEPTOR) VALIDATION")
-    print("=" * 60)
-    
-    print("\n[TEST 1] Clean Knowledge Documents:")
-    for d in clean_docs[:3]:
-        r = interceptor.score_vector(np.array(d["embedding"]))
-        print(f"  [{r['status']}] LOF: {r['lof_score']:.4f} | Latency: {r['latency_ms']:.3f} ms | Title: {d['title']}")
-        
-    print("\n[TEST 2] Adversarial Injections (Garak / PoisonedRAG):")
-    for atk in attack_docs:
-        r = interceptor.score_vector(np.array(atk["embedding"]))
-        print(f"  [{r['status']}] LOF: {r['lof_score']:.4f} | Latency: {r['latency_ms']:.3f} ms | Type: {atk['attack_type']}")
