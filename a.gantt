@@ -1,0 +1,19 @@
+gantt
+    title Vector-Shield Phase 1 Execution Timeline (Sem 7)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Milestone 1
+    Abstract Approval & Zeroth Review   :done,    m1, 2026-07-15, 2026-08-05
+
+    section Dataset & Attack Prep
+    MTEB Ingestion (Vignesh)            :active,  d1, 2026-08-06, 2026-08-20
+    Garak Simulations (Karthick)        :active,  d2, 2026-08-15, 2026-08-31
+
+    section Core Phase 1 Dev
+    LangChain Interception (Sanjay)     :         c1, 2026-09-01, 2026-09-15
+    LOF Math Filter (Hari)              :         c2, 2026-09-10, 2026-09-28
+
+    section Evaluation
+    Phase 1 System Integration          :         e1, 2026-09-29, 2026-10-05
+    Phase 1 Review (Oct 9 & 10)         :crit,    e2, 2026-10-09, 2026-10-10

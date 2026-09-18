@@ -1,0 +1,41 @@
+# Vector-Shield Configuration File
+
+project:
+  name: "Vector-Shield"
+  version: "1.0.0"
+  team: "AIDS Team 14"
+  institution: "Amrita School of Artificial Intelligence"
+
+vector_space:
+  dimension: 384
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  metric: "cosine"
+
+stage1_symbolic:
+  algorithm: "LocalOutlierFactor"
+  n_neighbors: 5
+  contamination: 0.08
+  pca_dimensions: 16           # Dimensionality compression before density scoring
+  safe_threshold: 1.25         # LOF <= 1.25: High-confidence Safe Context
+  anomaly_threshold: 2.50      # LOF >= 2.50: High-confidence Adversarial Anomaly (Quarantine)
+                               # 1.25 < LOF < 2.50: Borderline -> Route to Stage 2 (ModernBERT)
+
+stage2_neural:
+  model_id: "answerdotai/ModernBERT-base"
+  num_labels: 2
+  max_length: 512
+  classification_threshold: 0.50
+
+orchestration:
+  framework: "LangGraph"
+  self_healing: true
+  max_retrieval_retries: 3
+  telemetry_logging: true
+
+paths:
+  data_dir: "data"
+  clean_corpus: "data/clean_corpus.jsonl"
+  garak_attacks: "data/garak_attack_payloads.jsonl"
+  benchmark_dataset: "data/vector_shield_benchmark.jsonl"
+  model_weights: "models/modernbert_safetensors"
+  telemetry_log: "logs/telemetry.json"

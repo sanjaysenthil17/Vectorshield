@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environments
+.env
+venv/
+env/
+ENV/
+
+# Logs & temp
+*.log

@@ -1,0 +1,19 @@
+# Vector-Shield: Core Dependencies
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+pyyaml>=6.0.0
+
+# Vector Database & Retrieval
+chromadb>=0.4.20
+
+# UI & Visualization
+streamlit>=1.30.0
+plotly>=5.18.0
+
+# Deep Learning (For A100 GPU cluster)
+# torch>=2.2.0
+# transformers>=4.48.0
+# datasets>=2.16.0
+# accelerate>=0.27.0
