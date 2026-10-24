@@ -22,7 +22,8 @@ from src.dataset_generator import CLEAN_DOCUMENTS, ADVERSARIAL_PAYLOADS, generat
 @pytest.fixture(scope="module")
 def setup_environment():
     pipeline = VectorShieldRAGPipeline()
-    pipeline.interceptor.safe_threshold = 1.35
+    pipeline.interceptor.safe_threshold = 1.30
+    pipeline.interceptor.anomaly_threshold = 2.00
     embeddings = {doc["id"]: doc["embedding"] for doc in pipeline.documents}
     interceptor = pipeline.interceptor
     return interceptor, embeddings, pipeline

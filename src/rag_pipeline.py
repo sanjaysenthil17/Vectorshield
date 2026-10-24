@@ -25,6 +25,8 @@ except Exception:
     pass
 
 from src.lof_interceptor import VectorShieldLOFInterceptor
+from src.stage2_classifier import Stage2ModernBERTClassifier
+import urllib.request
 
 
 class VectorShieldRAGPipeline:
@@ -46,6 +48,7 @@ class VectorShieldRAGPipeline:
         self._initialize_interceptor()
         self._load_embedding_model()
         self._check_langgraph()
+        self.stage2 = Stage2ModernBERTClassifier()
 
     def _load_corpus(self):
         """Loads clean and benchmark documents."""
@@ -68,8 +71,8 @@ class VectorShieldRAGPipeline:
 
         self.interceptor = VectorShieldLOFInterceptor(
             n_neighbors=5,
-            safe_threshold=1.35,
-            anomaly_threshold=2.50,
+            safe_threshold=1.30,
+            anomaly_threshold=2.00,
             pca_dimensions=16
         )
         self.interceptor.fit(clean_vecs)
@@ -290,6 +293,100 @@ class VectorShieldRAGPipeline:
             "heal_iterations": heal_iterations,
             "execution_mode": "Inline (LangGraph fallback)"
         }
+
+    def ingest_document(self, text: str, title: str = "Uploaded Document", category: str = "Enterprise PDF/Doc") -> dict:
+        """
+        Dynamically chunks, embeds, screens, and ingests arbitrary documents or PDFs.
+        Returns detailed ingestion telemetry including LOF score and safety classification.
+        """
+        # 1. Real embedding
+        vec = self.embed_query(text)
+
+        # 2. Vector-Shield Pre-Screening
+        lof_result = self.interceptor.score_vector(vec)
+
+        # 3. Stage 2 Inspection if borderline
+        stage2_result = None
+        if lof_result["status"] == "BORDERLINE":
+            stage2_result = self.stage2.predict(text)
+
+        # 4. Generate new document entry
+        new_id = f"DOC_{len(self.documents) + 1:04d}"
+        is_suspicious = lof_result["status"] == "QUARANTINE_ANOMALY" or (
+            stage2_result is not None and stage2_result["prediction"] == "INJECTION"
+        )
+
+        doc_entry = {
+            "id": new_id,
+            "title": title,
+            "text": text,
+            "label": 1 if is_suspicious else 0,
+            "category": category,
+            "embedding": vec.tolist()
+        }
+
+        # Append to active runtime indices
+        self.documents.append(doc_entry)
+        self.embeddings = np.vstack([self.embeddings, vec])
+
+        # If malicious, trigger SIEM alert
+        siem_status = "NOT_TRIGGERED"
+        if is_suspicious:
+            siem_status = self.send_siem_alert({
+                "event_type": "POISONED_INGESTION_QUARANTINE",
+                "document_id": new_id,
+                "title": title,
+                "lof_score": lof_result["lof_score"],
+                "reason": "Topographic anomaly or prompt injection pattern detected during ingestion"
+            })
+
+        return {
+            "id": new_id,
+            "title": title,
+            "lof_score": lof_result["lof_score"],
+            "status": lof_result["status"],
+            "stage2_result": stage2_result,
+            "is_quarantined": is_suspicious,
+            "siem_dispatch": siem_status,
+            "total_documents_now": len(self.documents)
+        }
+
+    def send_siem_alert(self, payload: dict, webhook_url: str = None) -> str:
+        """
+        Dispatches SIEM / Splunk / Syslog / Webhook alert payloads on security breaches.
+        """
+        payload["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        payload["source_system"] = "Vector-Shield-v1.0"
+        payload["severity"] = "HIGH"
+
+        # Log alert to local SIEM audit trail
+        siem_log_path = "logs/siem_alerts.json"
+        try:
+            alerts = []
+            if os.path.exists(siem_log_path):
+                with open(siem_log_path, "r", encoding="utf-8") as f:
+                    alerts = json.load(f)
+            alerts.append(payload)
+            with open(siem_log_path, "w", encoding="utf-8") as f:
+                json.dump(alerts[-100:], f, indent=2)
+        except Exception:
+            pass
+
+        # If external webhook URL configured, POST it
+        if webhook_url and webhook_url.startswith("http"):
+            try:
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(
+                    webhook_url,
+                    data=data,
+                    headers={"Content-Type": "application/json", "User-Agent": "VectorShield-SIEM/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=3) as res:
+                    return f"DISPATCHED (HTTP {res.status})"
+            except Exception as e:
+                return f"WEBHOOK_FAILED ({e})"
+
+        return "LOGGED_TO_SIEM_AUDIT_TRAIL"
 
     def run_benchmark(self) -> dict:
         """
