@@ -22,23 +22,31 @@ To assess detection fidelity, latency, and system resilience, we evaluate:
 \section{Empirical Evaluation Results}
 Table \ref{tab:empirical_benchmarks} summarizes the benchmark metrics achieved across the scaled corporate corpus and adversarial injection datasets.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Vector-Shield Comprehensive Performance Benchmarks}
 \label{tab:empirical_benchmarks}
-\begin{tabular}{lccc}
-\toprule
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|}
+\hline
 \textbf{Metric} & \textbf{Target Threshold} & \textbf{Vector-Shield Achieved} & \textbf{Status} \\
-\midrule
+\hline
 Stage 1 Average Latency & $< 2.00$\,ms & \textbf{1.82\,ms} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 Clean Document Pass Rate & $\ge 90.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 Outlier Attack Quarantine Recall & $100.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 Borderline Routing Accuracy & $100.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 Stage 2 ModernBERT Accuracy & $\ge 95.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 Stage 2 ModernBERT F1-Score & $\ge 95.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
+\hline
 End-to-End Self-Healing Recall & $100.00\%$ & \textbf{100.00\%} & \textcolor{teal}{\textbf{PASSED}} \\
-\bottomrule
-\end{tabular}
+\hline
+\end{tabular}%
+}
 \end{table}
 
 \begin{figure}[h]

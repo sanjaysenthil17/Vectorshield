@@ -32,21 +32,27 @@ ModernBERT introduces FlashAttention-2, native unpadding, GeGLU activation layer
 \section{Summary of Research Gaps}
 Table \ref{tab:lit_comparison} highlights the technical gaps in existing defense methodologies and outlines how Vector-Shield addresses them.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
-\small
 \caption{Comparison of Vector-Shield with Existing Enterprise Guardrails}
 \label{tab:lit_comparison}
-\begin{tabular}{lcccc}
-\toprule
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|}
+\hline
 \textbf{Attribute} & \textbf{Llama Guard} & \textbf{NeMo Guardrails} & \textbf{Regex/Rules} & \textbf{Vector-Shield (Ours)} \\
-\midrule
+\hline
 Inspection Layer & Text Output & Dialogue Flow & Raw Text & \textbf{Vector Space (Pre-LLM)} \\
+\hline
 Added Latency & 800--2500\,ms & 400--1200\,ms & $< 1$\,ms & \textbf{1.82\,ms (Stage 1)} \\
+\hline
 Token Consumption & High & Medium & None & \textbf{Zero Token Cost} \\
+\hline
 Obfuscation Resistance & Moderate & Moderate & Zero & \textbf{High (Dual-Stage)} \\
+\hline
 Recovery Mechanism & Hard Refusal & Dialogue Abort & Masking & \textbf{LangGraph Self-Healing} \\
+\hline
 Target Environment & Cloud Server & Cloud Server & Edge/Local & \textbf{Enterprise Sidecar} \\
-\bottomrule
-\end{tabular}
+\hline
+\end{tabular}%
+}
 \end{table}

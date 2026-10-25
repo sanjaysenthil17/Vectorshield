@@ -22,3 +22,7 @@ logs/
 *.pt
 *.pth
 *.zip
+
+# Exceptions for git-tracked small checkpoints and thesis distribution
+!models/stage2_compact/classifier_core.pt
+!thesis_aid.zip

@@ -16,25 +16,34 @@ Stage 2 training was executed on an enterprise-grade \textbf{NVIDIA A100 80GB PC
 \subsection{Hyperparameter Configuration}
 Table \ref{tab:hyperparams} delineates the exact training parameters used during Stage 2 convergence.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Stage 2 ModernBERT Fine-Tuning Hyperparameters}
 \label{tab:hyperparams}
-\begin{tabular}{lc}
-\toprule
+\begin{tabular}{|l|c|}
+\hline
 \textbf{Hyperparameter} & \textbf{Value} \\
-\midrule
+\hline
 Foundation Checkpoint & \texttt{answerdotai/ModernBERT-base} \\
+\hline
 Hardware Accelerator & NVIDIA A100 80GB PCIe \\
+\hline
 Batch Size & 16 \\
+\hline
 Epochs & 3 \\
+\hline
 Learning Rate & $2 \times 10^{-5}$ \\
+\hline
 Optimizer & AdamW ($\beta_1=0.9, \beta_2=0.999$, weight decay $= 0.01$) \\
+\hline
 Learning Rate Schedule & Linear Warmup ($10\%$ of steps) with Decay \\
+\hline
 Precision & Mixed Precision FP16 (\texttt{torch.cuda.amp.autocast}) \\
+\hline
 Max Sequence Length & 256 tokens \\
+\hline
 Classification Head & Linear Projection ($768 \to 2$) with Cross-Entropy Loss \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -61,23 +70,33 @@ The fine-tuning progression on the NVIDIA A100 demonstrated rapid, stable loss c
 \label{fig:training_loss_curves}
 \end{figure}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Final Validation Classification Report on Holdout Dataset}
 \label{tab:classification_report}
-\begin{tabular}{lcccc}
-\toprule
+\begin{tabular}{|l|c|c|c|c|}
+\hline
 \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\
-\midrule
+\hline
 Clean Documents (0) & 1.00 & 1.00 & 1.00 & 20 \\
+\hline
 Adversarial Injections (1) & 1.00 & 1.00 & 1.00 & 15 \\
-\midrule
+\hline
 \textbf{Overall Accuracy} & & & \textbf{1.00} & \textbf{35} \\
+\hline
 \textbf{Macro Average} & 1.00 & 1.00 & 1.00 & 35 \\
+\hline
 \textbf{Weighted Average} & 1.00 & 1.00 & 1.00 & 35 \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{adversarial_density_manifold.png}
+\caption{Empirical Manifold Projection: Cosine Centroid Distance vs. Scaled LOF Score}
+\label{fig:adversarial_density_manifold}
+\end{figure}
 
 \section{Real-Time Inference Performance}
 Following training, the model checkpoint was serialized to \texttt{models/stage2\_modernbert/}. During live inference across the evaluation suite:
