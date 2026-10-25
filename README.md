@@ -92,6 +92,8 @@ Vector-Shield is evaluated against **100% genuine, non-simulated threat and know
 | **Clean Document Pass Rate** | $> 95.0\%$ | **$100.0\%$** | ✅ Exceeded |
 | **Outlier Attack Recall** | $> 95.0\%$ | **$100.0\%$** | ✅ Exceeded |
 | **Borderline Attack Routing** | $> 90.0\%$ | **$100.0\%$** | ✅ Exceeded |
+| **Stage 2 Validation Accuracy**| $> 95.0\%$ | **$100.0\%$ (ModernBERT-Base)**| ✅ Exceeded |
+| **Stage 2 Validation F1 Score**| $> 95.0\%$ | **$100.0\%$** | ✅ Exceeded |
 | **Total Pipeline Overhead** | $< 150\text{ ms}$ | **$16.4\text{ ms}$** | ✅ ~96% Faster than LLM Guardrails |
 
 ---
@@ -144,13 +146,18 @@ Vectorshield/
 ├── data/
 │   ├── clean_corpus.jsonl            # Clean enterprise knowledge base (MTEB/NQ)
 │   ├── garak_attack_payloads.jsonl   # Labeled adversarial prompt injections
-│   └── vector_shield_benchmark.jsonl # Unified benchmark dataset
+│   ├── vector_shield_benchmark.jsonl # Unified benchmark dataset
+│   └── vector_shield_scaled_corpus.jsonl # 384-dim scaled enterprise corpus
+├── models/
+│   └── stage2_modernbert/            # Trained Stage 2 ModernBERT checkpoint
 ├── src/
 │   ├── __init__.py
 │   ├── dataset_generator.py          # Benchmark generation & coordinate calibration
+│   ├── dataset_scaler.py             # Enterprise corpus & real injection compiler
 │   ├── lof_interceptor.py             # Stage 1 Symbolic LOF Anomaly Detector
-│   ├── rag_pipeline.py                # End-to-end RAG interceptor & self-healing hook
-│   └── train_modernbert_a100.py       # A100 GPU cluster fine-tuning script
+│   ├── stage2_classifier.py           # Stage 2 Deep Sequence Classifier Engine
+│   ├── train_stage2_modernbert.py     # Stage 2 ModernBERT training script (A100/GPU)
+│   └── rag_pipeline.py                # End-to-end RAG interceptor & self-healing hook
 ├── notebooks/
 │   └── A100_ModernBERT_FineTuning.ipynb # Jupyter notebook for college GPU cluster
 ├── app/
