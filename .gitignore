@@ -14,3 +14,11 @@ ENV/
 
 # Logs & temp
 *.log
+logs/
+
+# Large Model Weights (>100MB for GitHub file size constraints)
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.zip
