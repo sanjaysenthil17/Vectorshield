@@ -49,6 +49,13 @@ To overcome this, Vector-Shield applies an \textbf{Adaptive Principal Component 
 \end{equation}
 where $d_{proj} = 16$. Dimensionality reduction to 16 components preserves $> 88\%$ of the cumulative spectral variance while slashing pairwise $k$-NN distance computation time by over $90\%$.
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.82\textwidth]{lof_density_distribution.png}
+\caption{2D Topographic Projection of Vector Embeddings and LOF Decision Boundary Zones}
+\label{fig:lof_density_distribution}
+\end{figure}
+
 \section{Soft-Margin Decision Rules}
 Vector-Shield establishes a three-tier soft-margin decision rule parameterized by safe threshold $\tau_{safe} = 1.30$ and anomaly threshold $\tau_{anom} = 2.50$:
 \begin{equation}

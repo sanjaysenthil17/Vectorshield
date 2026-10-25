@@ -41,6 +41,13 @@ End-to-End Self-Healing Recall & $100.00\%$ & \textbf{100.00\%} & \textcolor{tea
 \end{tabular}
 \end{table}
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.82\textwidth]{latency_comparison.png}
+\caption{Inference Latency Benchmark: Vector-Shield vs. Production LLM Guardrails (Log Scale)}
+\label{fig:latency_comparison}
+\end{figure}
+
 \section{Detailed Analysis of Test Suite Execution}
 The integration test suite (\texttt{pytest tests/test\_interceptor.py -v}) validates all defense constraints under automated testing:
 \begin{itemize}
