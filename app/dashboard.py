@@ -374,13 +374,13 @@ with tab5:
 
     col_m1, col_m2 = st.columns(2)
     with col_m1:
-        st.markdown(f"""
+        st.markdown("""
         ### Stage 1: Mathematical Density Metric
         - **Model**: `all-MiniLM-L6-v2` (384D)
         - **Cosine Centroid Formula**:
-        $$\\\\text{{LOF}}_{{\\\\text{{scaled}}}} = \\\\text{{LOF}}_k(p) \\\\cdot \\\\left(\\\\frac{d_{{\\\\text{{cos}}}}(p, \\\\mathbf{{c}})}{{\\\\tau_{{\\\\text{{baseline}}}}}}\\\\right)^{{1.2}}$$
-        - **Measured Latency**: `{benchmark['avg_lof_latency_ms']:.2f} ms`
         """)
+        st.latex(r"\text{LOF}_{\text{scaled}} = \text{LOF}_k(p) \cdot \left(\frac{d_{\text{cos}}(p, \mathbf{c})}{\tau_{\text{baseline}}}\right)^{1.2}")
+        st.markdown(f"- **Measured Latency**: `{benchmark['avg_lof_latency_ms']:.2f} ms`")
     with col_m2:
         st.markdown("""
         ### Stage 2: Deep Sequence Classifier
