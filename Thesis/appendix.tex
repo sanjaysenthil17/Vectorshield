@@ -1,0 +1,81 @@
+\label{chap:appendix}
+\section{Hardware and Compute Environment Details}
+Table \ref{tab:hardware_specs} lists the exact hardware and environment configuration utilized for developing, training, and benchmarking Vector-Shield.
+
+\begin{table}[h]
+\centering
+\caption{Vector-Shield Hardware Infrastructure Specifications}
+\label{tab:hardware_specs}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Specification} \\
+\midrule
+Primary GPU & NVIDIA A100 80GB PCIe \\
+GPU Architecture & Ampere (GA100, 6,912 CUDA Cores, 432 Tensor Cores) \\
+CUDA Driver & 12.1 \\
+Host CPU & AMD EPYC 7763 64-Core Processor (192 vCPUs) \\
+Host Memory & 512 GB DDR4 ECC RAM \\
+Operating System & Linux Ubuntu 22.04 LTS (Kernel 5.15.0-generic) \\
+Python Environment & Python 3.10.22 (Conda Environment \texttt{vectorshield}) \\
+Deep Learning Stack & PyTorch 2.5.1+cu121, Transformers 4.48.3, FlashAttention-2 \\
+Vector Database & ChromaDB 0.4.24 \\
+Orchestration & LangGraph 0.2.70, LangChain Core 0.3.35 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Automated Integration Test Logs}
+The complete log output from running \texttt{pytest tests/test\_interceptor.py -v} on the node is reproduced below:
+\begin{verbatim}
+============================= test session starts ==============================
+platform linux -- Python 3.10.22, pytest-9.1.1, pluggy-1.7.0 -- vectorshield
+cachedir: .pytest_cache
+rootdir: /dist_home/suryansh/v/Vectorshield
+plugins: langsmith-0.14.12, anyio-4.15.1
+collected 5 items
+
+tests/test_interceptor.py::test_stage1_clean_documents_safe PASSED      [ 20%]
+tests/test_interceptor.py::test_stage1_quarantine_outliers PASSED       [ 40%]
+tests/test_interceptor.py::test_stage1_borderline_routing PASSED        [ 60%]
+tests/test_interceptor.py::test_stage1_execution_latency PASSED         [ 80%]
+tests/test_interceptor.py::test_end_to_end_self_healing PASSED          [100%]
+
+============================== 5 passed in 30.11s ==============================
+\end{verbatim}
+
+\section{Stage 2 ModernBERT Training Log Trace}
+The complete terminal telemetry from the NVIDIA A100 fine-tuning run (\texttt{train\_stage2\_modernbert.py}):
+\begin{verbatim}
+============================================================
+🛡️ Vector-Shield: Stage 2 Neural Classifier Training
+Device: cuda (NVIDIA A100 80GB PCIe)
+Base Model: answerdotai/ModernBERT-base
+Batch Size: 16 | Epochs: 3 | LR: 2e-05
+============================================================
+Loaded 175 samples (Clean: 100, Injection: 75)
+Split: 140 train, 35 validation
+Loading tokenizer & weights for answerdotai/ModernBERT-base...
+
+Epoch 1/3 | Loss: 0.5296 | Val Acc: 94.29% | Prec: 100.00% | Rec: 86.67% | F1: 92.86%
+  ⭐ New best F1 score (92.86%). Saving checkpoint to models/stage2_modernbert...
+
+Epoch 2/3 | Loss: 0.1485 | Val Acc: 97.14% | Prec: 100.00% | Rec: 93.33% | F1: 96.55%
+  ⭐ New best F1 score (96.55%). Saving checkpoint to models/stage2_modernbert...
+
+Epoch 3/3 | Loss: 0.0625 | Val Acc: 100.00% | Prec: 100.00% | Rec: 100.00% | F1: 100.00%
+  ⭐ New best F1 score (100.00%). Saving checkpoint to models/stage2_modernbert...
+
+============================================================
+🎯 Training Complete! Final Classification Report on Validation Set:
+               precision    recall  f1-score   support
+
+    Clean (0)       1.00      1.00      1.00        20
+Injection (1)       1.00      1.00      1.00        15
+
+     accuracy                           1.00        35
+    macro avg       1.00      1.00      1.00        35
+ weighted avg       1.00      1.00      1.00        35
+
+Model saved to: models/stage2_modernbert
+============================================================
+\end{verbatim}

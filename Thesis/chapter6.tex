@@ -1,0 +1,83 @@
+\label{chap:langgraph}
+\section{The Failure of Traditional Hard Refusal}
+When conventional AI guardrails identify an adversarial injection, their standard failure mode is an unconditional exception halt (e.g., \enquote{\texttt{Error 403: Blocked by Safety Policy}}). In automated enterprise environments—such as autonomous claims processing, real-time fraud monitoring, or enterprise customer support—hard refusals introduce catastrophic operational friction:
+\begin{enumerate}
+    \item \textbf{Complete Workflow Stoppage:} An innocent user querying an expense report is denied service simply because one poisoned document happened to exist in the database.
+    \item \textbf{Silent Denial of Service (DoS):} An attacker can intentionally poison peripheral corporate documents to systematically blind the AI assistant to legitimate records.
+\end{enumerate}
+
+\section{LangGraph State Machine Architecture}
+To achieve true autonomy, Vector-Shield integrates a \textbf{Stateful Cyclic Self-Healing Graph} built on LangGraph \cite{langgraph2024}. Instead of terminating upon anomaly detection, the system models the retrieval lifecycle as a directed cyclic computational graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$.
+
+\subsection{State Schema Definition}
+The system state is tracked via a typed dictionary $\mathcal{S}$ passed across nodes:
+\begin{equation}
+    \mathcal{S} = \langle q,\, \mathbf{v}_q,\, \mathcal{C}_{cand},\, \mathcal{B}_{quarantine},\, k,\, \text{attempt},\, \mathcal{R}_{safe},\, \text{status},\, \mathcal{L}_{audit} \rangle
+\end{equation}
+where:
+\begin{itemize}
+    \item $q \in \mathcal{X}$: Original user query text.
+    \item $\mathcal{C}_{cand}$: Candidate retrieved document passages.
+    \item $\mathcal{B}_{quarantine} \subset \mathbb{N}$: Dynamic blacklist of poisoned document IDs.
+    \item $k \in \mathbb{N}$: Retrieval depth (dynamically incremented during self-healing).
+    \item $\mathcal{R}_{safe}$: Filtered, sanitized context verified by Stage 1 and Stage 2.
+    \item $\mathcal{L}_{audit}$: Structured audit trail containing latency timestamps and SIEM payloads.
+\end{itemize}
+
+\section{Computational Graph Nodes and Transition Logic}
+The self-healing workflow consists of four coordinated graph nodes:
+\begin{enumerate}
+    \item \textbf{Node 1: Retrieve Context (\texttt{retrieve\_node}):} Queries ChromaDB for the top-$k$ nearest candidate documents, filtering out any document ID present in $\mathcal{B}_{quarantine}$.
+    \item \textbf{Node 2: Vector-Shield Interceptor (\texttt{interceptor\_node}):} Computes Stage 1 LOF density scores. If an anomaly is caught or borderline classification triggers an injection verdict:
+    \begin{itemize}
+        \item The tainted document ID $d_{tainted}$ is appended to $\mathcal{B}_{quarantine}$.
+        \item An alert payload is logged to $\mathcal{L}_{audit}$.
+        \item The retrieval counter is incremented ($k \leftarrow k + 1$).
+    \end{itemize}
+    \item \textbf{Node 3: Conditional Routing (\texttt{route\_check}):} 
+    \begin{itemize}
+        \item If any candidate is quarantined, edge transitions back to \texttt{retrieve\_node} (Self-Healing Loop).
+        \item If all candidates are verified $\text{SAFE}$, edge transitions to \texttt{llm\_synthesis\_node}.
+    \end{itemize}
+    \item \textbf{Node 4: Secure LLM Synthesis (\texttt{llm\_synthesis\_node}):} Generates the final user completion utilizing authenticated clean context chunks.
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\begin{tabular}{|c|}
+\hline
+\textbf{LangGraph Self-Healing Workflow} \\
+\hline
+$\downarrow$ \\
+\fbox{\textbf{Node 1: Retrieve Context}} (Query Vector Store excluding Blacklist $\mathcal{B}_{quarantine}$) \\
+$\downarrow$ \\
+\fbox{\textbf{Node 2: Interceptor}} (Stage 1 LOF $\to$ Stage 2 ModernBERT Verification) \\
+$\downarrow$ \\
+$\langle \text{Is Chunk Malicious?} \rangle$ \\
+$\swarrow$ \hspace{4cm} $\searrow$ \\
+\textbf{YES (Anomalous)} \hspace{3cm} \textbf{NO (Safe Context)} \\
+$\downarrow$ \hspace{5cm} $\downarrow$ \\
+\fbox{Add ID to $\mathcal{B}_{quarantine}$; $k \leftarrow k+1$} \hspace{1cm} \fbox{\textbf{Node 4: LLM Generation}} \\
+$\downarrow$ \hspace{5cm} $\downarrow$ \\
+(Loop back to Node 1) \hspace{2.5cm} \textbf{Secure Completion Output} \\
+\hline
+\end{tabular}
+\caption{Architectural State Machine of the LangGraph Self-Healing Recovery Loop}
+\label{fig:langgraph_workflow}
+\end{figure}
+
+\section{SIEM Event Dispatching and Enterprise Auditability}
+For enterprise compliance (SOC 2, ISO 27001), all intercepted threats generate standardized JSON telemetry dispatched via HTTP webhooks to enterprise SIEM platforms (Splunk, Datadog, or Slack Security Channels):
+\begin{verbatim}
+{
+  "timestamp": "2026-10-25T07:31:00Z",
+  "event": "VECTOR_SHIELD_QUARANTINE",
+  "document_id": "atk_ipi_001",
+  "lof_score": 3.842,
+  "stage2_confidence": 0.8277,
+  "action_taken": "PURGED_AND_HEALED",
+  "agent_status": "SECURE",
+  "latency_ms": 1.82
+}
+\end{verbatim}
+This mechanism guarantees end-to-end incident traceability without interrupting business operations.

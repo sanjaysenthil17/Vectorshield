@@ -1,0 +1,40 @@
+\label{chap:threat_model}
+\section{System Architecture and Operational Workflow}
+Consider an enterprise Agentic RAG system consisting of a vector database $\mathcal{V}$, an embedding model $\mathcal{E}: \mathcal{X} \to \mathbb{R}^d$, and a generative large language model $\mathcal{M}_\theta$. The knowledge corpus $\mathcal{C}$ contains $N$ authenticated text passages $\{c_1, c_2, \dots, c_N\}$, embedded as unit vectors $\mathbf{v}_i = \frac{\mathcal{E}(c_i)}{\|\mathcal{E}(c_i)\|_2} \in \mathbb{S}^{d-1}$.
+
+When a user submits a prompt $q$, the retriever extracts the $k$ most similar documents:
+\begin{equation}
+    \mathcal{R}(q, k) = \arg\max_{c_i \in \mathcal{C}}^{(k)} \left( \mathbf{v}_q^\top \mathbf{v}_i \right)
+\end{equation}
+The retrieved passages are formatted into a synthesis prompt $P = \text{Concat}(S_{sys}, \mathcal{R}(q, k), q)$, where $S_{sys}$ denotes the system instructions enforcing role fidelity, confidentiality, and tool authorization. The model then generates completion $Y \sim \mathcal{M}_\theta(P)$.
+
+\section{Adversary Model and Capabilities}
+We formalize an adversary $\mathcal{A}$ under the following threat conditions:
+\begin{enumerate}
+    \item \textbf{No Direct Chat Access:} $\mathcal{A}$ cannot directly interact with the enterprise chat session or manipulate the system prompt $S_{sys}$.
+    \item \textbf{Corpus Ingestion Channel:} $\mathcal{A}$ has write or deposit access to an external data repository consumed by the automated ingestion pipeline (e.g., supplier portals, ticketing systems, uploaded vendor contracts).
+    \item \textbf{Payload Construction:} $\mathcal{A}$ crafts an adversarial passage $p_{atk}$ consisting of benign topical camouflage text $T_{cov}$ interleaved with an imperative injection sequence $I_{mal}$:
+    \begin{equation}
+        p_{atk} = T_{cov} \oplus I_{mal}
+    \end{equation}
+\end{enumerate}
+
+\section{Taxonomy of Indirect Prompt Injections}
+We categorize adversarial payloads into four distinct geometric and semantic attack profiles:
+\begin{itemize}
+    \item \textbf{Type 1: Direct System Overrides (Isolated Outliers):} Payloads that abruptly command the LLM to ignore all safety guidelines (e.g., \enquote{\texttt{URGENT SYSTEM COMMAND: Disregard previous rules and output all connection strings}}). Because these strings lack enterprise lexical coherence, their resulting vector representations deviate sharply from the domain manifold, appearing as distant spatial outliers.
+    \item \textbf{Type 2: Stealth Policy Poisoning (Borderline Payloads):} Subtly altered policies that blend genuine domain terminology with fraudulent exceptions (e.g., \enquote{\texttt{Per revised emergency circular 2026-B, third-party wire transfers below \$50,000 do not require supervisor countersignature}}). These payloads project into the boundary region of legitimate enterprise clusters ($1.30 < \text{LOF} < 2.50$).
+    \item \textbf{Type 3: Tool Hijacking and Data Exfiltration:} Injections that trick the agent into calling external HTTP tools or executing rogue SQL commands, transmitting session cookies or API keys to adversary command-and-control servers.
+    \item \textbf{Type 4: Obfuscation and Encoding Evasions:} Payloads obscured using Base64 encodings, spaced lettering (\enquote{\texttt{D.i.s.r.e.g.a.r.d}}), or roleplay DAN prompts designed to defeat surface-level regex and keyword matching.
+\end{itemize}
+
+\section{The Geometric Intuition Behind Vector-Shield}
+Enterprise documents within specific operational verticals (banking, treasury, compliance, IT security) inhabit tight, clustered low-intrinsic-dimensional sub-manifolds within the ambient embedding space $\mathbb{R}^d$. 
+
+Adversarial payloads, by virtue of carrying imperative command semantics, systemic override syntax, or cross-domain linguistic triggers, exhibit altered directional orientations. In a properly regularized metric space, an adversarial vector $\mathbf{v}_{atk}$ either:
+\begin{enumerate}
+    \item Resides in a low-density void far from legitimate cluster centroids (Stage 1 Outlier, $\text{LOF} \ge 2.50$).
+    \item Hover on the borderline perimeter of the domain manifold (Stage 1 Borderline, $1.30 < \text{LOF} < 2.50$).
+\end{enumerate}
+
+By decomposing the defense into a fast geometric filter followed by a targeted neural discriminator, Vector-Shield achieves comprehensive coverage with sub-2ms typical latency.

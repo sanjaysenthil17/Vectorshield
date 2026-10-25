@@ -1,0 +1,52 @@
+\label{chap:litreview}
+\section{Evolution of Retrieval-Augmented Generation (RAG)}
+Retrieval-Augmented Generation (RAG) was formally proposed by Lewis et al. \cite{lewis2020retrieval} as a hybrid architecture combining pre-trained parametric sequence-to-sequence neural networks with non-parametric dense vector memories. In typical enterprise implementations, proprietary knowledge bases are partitioned into passages $\mathcal{P} = \{p_1, p_2, \dots, p_N\}$, which are mapped into a $d$-dimensional continuous dense vector space $\mathbb{R}^d$ using bi-encoder models such as Sentence-BERT \cite{reimers2019sentence}. 
+
+Given an incoming query $q$, the retriever computes inner-product or cosine similarity scores $s(q, p_i) = \frac{\mathbf{v}_q \cdot \mathbf{v}_{p_i}}{\|\mathbf{v}_q\| \|\mathbf{v}_{p_i}\|}$ to return the top-$k$ nearest document vectors. While exceptionally performant for open-domain question answering, traditional RAG operates under the hazardous assumption of \textit{corpus trust}: it treats all indexed document vectors as authentic and non-hostile.
+
+\section{Prompt Injection and Adversarial Threat Vectors}
+As language models were interfaced with external data sources and execution sandboxes, adversarial attacks expanded rapidly from direct jailbreaks (such as \enquote{Do Anything Now} or roleplay framing) to \textbf{Indirect Prompt Injections (IPI)}. Greshake et al. \cite{greshake2023not} demonstrated that external data ingestors could be leveraged to execute remote instructions without direct adversary interaction. 
+
+Zou et al. \cite{zou2025poisonedrag} introduced \textit{PoisonedRAG}, demonstrating that by introducing a small fraction ($< 0.1\%$) of malicious chunks into a vector database, an adversary can manipulate the generated responses with over $90\%$ attack success rates. Ward and Harguess \cite{ward2025adversarial} further classified IPI vectors into system command overrides, exfiltration through tool invocation, policy forgery, and covert instruction cloaking.
+
+\section{Limitations of Existing Generative Guardrails}
+To counter these vulnerabilities, security teams have deployed guardrail frameworks designed to inspect language inputs and outputs. Prominent examples include:
+\begin{itemize}
+    \item \textbf{Meta Llama Guard:} Inan et al. \cite{inan2023llama} proposed fine-tuning a 7B-parameter Llama checkpoint specifically to output safety taxonomy classifications (\enquote{safe} vs. \enquote{unsafe}). However, running a 7B LLM on every candidate retrieved passage introduces significant latency ($> 1000$\,ms), introduces substantial GPU memory overhead, and increases serving costs.
+    \item \textbf{NVIDIA NeMo Guardrails:} NeMo utilizes programmable Colang dialogue rails. While effective for dialog flow constraint, it relies on repeated intermediate LLM calls to verify grounding, leading to conversational bottlenecks.
+    \item \textbf{Rule-Based and Regex Sanitizers:} Static keyword matching fails against modern obfuscated attacks, including Base64 encodings, zero-width space insertions, leetspeak variations, and cross-lingual evasions.
+\end{itemize}
+
+\section{Density-Based Anomaly Detection in Embedding Spaces}
+Density-based spatial clustering and anomaly identification was established by Breunig et al. \cite{breunig2000lof} via the \textit{Local Outlier Factor} (LOF). Unlike global anomaly metrics (such as Mahalanobis distance or Isolation Forests), LOF calculates the degree of an object being an outlier relative to the density of its local $k$-nearest neighborhood. 
+
+However, applying classical Euclidean LOF directly to modern 384- or 768-dimensional language embeddings encounters the notorious \textbf{Curse of Dimensionality}: in high-dimensional spheres, Euclidean distances between normalized vectors concentrate near $\sqrt{2}$, degrading density discrimination. 
+
+Al Masoud et al. \cite{masoud2026sdrag} and Khonde et al. \cite{khonde2026end} noted that geometric defense requires projected topological representations and angular boundary definitions to differentiate natural lexical diversity from adversarial semantic divergence.
+
+\section{Next-Generation Transformer Encoders: ModernBERT}
+To handle ambiguous borderline anomalies without sacrificing real-time throughput, compact bidirectional encoder representations are required. Recently, Warner et al. \cite{warner2024modernbert} released \textbf{ModernBERT}, an architecturally overhauled bidirectional transformer encoder trained on 2 trillion tokens. 
+
+ModernBERT introduces FlashAttention-2, native unpadding, GeGLU activation layers, alternating local-global attention heads, and native 8,192-token sequence support. When executed on high-performance GPU nodes (such as NVIDIA A100/H100), ModernBERT exhibits up to $4\times$ the inference throughput of standard DeBERTa-v3 and RoBERTa, making it an ideal neural classifier for Stage 2 real-time middleware.
+
+\section{Summary of Research Gaps}
+Table \ref{tab:lit_comparison} highlights the technical gaps in existing defense methodologies and outlines how Vector-Shield addresses them.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Comparison of Vector-Shield with Existing Enterprise Guardrails}
+\label{tab:lit_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Attribute} & \textbf{Llama Guard} & \textbf{NeMo Guardrails} & \textbf{Regex/Rules} & \textbf{Vector-Shield (Ours)} \\
+\midrule
+Inspection Layer & Text Output & Dialogue Flow & Raw Text & \textbf{Vector Space (Pre-LLM)} \\
+Added Latency & 800--2500\,ms & 400--1200\,ms & $< 1$\,ms & \textbf{1.82\,ms (Stage 1)} \\
+Token Consumption & High & Medium & None & \textbf{Zero Token Cost} \\
+Obfuscation Resistance & Moderate & Moderate & Zero & \textbf{High (Dual-Stage)} \\
+Recovery Mechanism & Hard Refusal & Dialogue Abort & Masking & \textbf{LangGraph Self-Healing} \\
+Target Environment & Cloud Server & Cloud Server & Edge/Local & \textbf{Enterprise Sidecar} \\
+\bottomrule
+\end{tabular}
+\end{table}

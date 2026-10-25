@@ -1,0 +1,63 @@
+\label{chap:stage1}
+\section{Local Outlier Factor (LOF) Mathematical Formulation}
+The core deterministic filtering engine in Vector-Shield is built upon the Local Outlier Factor (LOF) framework, adapted to the topological geometry of high-dimensional sentence embeddings.
+
+Let $\mathcal{D} = \{\mathbf{x}_1, \mathbf{x}_2, \dots, \mathbf{x}_N\}$ represent the reference corpus of legitimate enterprise document vectors. For any vector $\mathbf{p} \in \mathbb{R}^d$:
+
+\begin{Definition}[\textbf{$k$-Distance}]
+For any positive integer $k$, the $k$-distance of point $\mathbf{p}$, denoted as $k\text{-distance}(\mathbf{p})$, is the distance $d(\mathbf{p}, \mathbf{o})$ between $\mathbf{p}$ and an object $\mathbf{o} \in \mathcal{D}$ such that:
+\begin{enumerate}
+    \item For at least $k$ objects $\mathbf{o}' \in \mathcal{D} \setminus \{\mathbf{p}\}$, $d(\mathbf{p}, \mathbf{o}') \le d(\mathbf{p}, \mathbf{o})$.
+    \item For at most $k-1$ objects $\mathbf{o}' \in \mathcal{D} \setminus \{\mathbf{p}\}$, $d(\mathbf{p}, \mathbf{o}') < d(\mathbf{p}, \mathbf{o})$.
+\end{enumerate}
+\end{Definition}
+
+The $k$-nearest neighbors of $\mathbf{p}$ are denoted by the set:
+\begin{equation}
+    N_k(\mathbf{p}) = \{\mathbf{q} \in \mathcal{D} \setminus \{\mathbf{p}\} \mid d(\mathbf{p}, \mathbf{q}) \le k\text{-distance}(\mathbf{p})\}
+\end{equation}
+
+\begin{Definition}[\textbf{Reachability Distance}]
+The reachability distance of point $\mathbf{p}$ with respect to object $\mathbf{o}$ is defined as:
+\begin{equation}
+    \text{reach-dist}_k(\mathbf{p}, \mathbf{o}) = \max \{ k\text{-distance}(\mathbf{o}),\, d(\mathbf{p}, \mathbf{o}) \}
+\end{equation}
+\end{Definition}
+
+\begin{Definition}[\textbf{Local Reachability Density (lrd)}]
+The local reachability density of point $\mathbf{p}$ is the inverse of the average reachability distance over its $k$-nearest neighbors:
+\begin{equation}
+    \text{lrd}_k(\mathbf{p}) = \left[ \frac{\sum_{\mathbf{o} \in N_k(\mathbf{p})} \text{reach-dist}_k(\mathbf{p}, \mathbf{o})}{|N_k(\mathbf{p})|} \right]^{-1}
+\end{equation}
+\end{Definition}
+
+\begin{Definition}[\textbf{Local Outlier Factor (LOF)}]
+The Local Outlier Factor of point $\mathbf{p}$ is the average ratio of the local reachability densities of its neighbors to that of $\mathbf{p}$:
+\begin{equation}
+    \text{LOF}_k(\mathbf{p}) = \frac{\sum_{\mathbf{o} \in N_k(\mathbf{p})} \frac{\text{lrd}_k(\mathbf{o})}{\text{lrd}_k(\mathbf{p})}}{|N_k(\mathbf{p})|} = \frac{\sum_{\mathbf{o} \in N_k(\mathbf{p})} \text{lrd}_k(\mathbf{o})}{|N_k(\mathbf{p})| \cdot \text{lrd}_k(\mathbf{p})}
+\end{equation}
+\end{Definition}
+
+An inlier embedded inside a dense, homogeneous corporate cluster produces $\text{LOF}_k(\mathbf{p}) \approx 1.0$. Conversely, an isolated outlier or adversarial injection possesses a significantly smaller $\text{lrd}_k(\mathbf{p})$ than its neighbors, yielding $\text{LOF}_k(\mathbf{p}) \gg 1.0$.
+
+\section{Overcoming the Curse of Dimensionality: Adaptive PCA Projection}
+In ambient 384-dimensional or 768-dimensional spaces, computing LOF directly incurs computational latency exceeding $25$\,ms and suffers from distance concentration effects. 
+
+To overcome this, Vector-Shield applies an \textbf{Adaptive Principal Component Analysis (PCA)} projection matrix $\mathbf{W} \in \mathbb{R}^{d \times d_{proj}}$:
+\begin{equation}
+    \mathbf{z} = \mathbf{W}^\top (\mathbf{v} - \boldsymbol{\mu})
+\end{equation}
+where $d_{proj} = 16$. Dimensionality reduction to 16 components preserves $> 88\%$ of the cumulative spectral variance while slashing pairwise $k$-NN distance computation time by over $90\%$.
+
+\section{Soft-Margin Decision Rules}
+Vector-Shield establishes a three-tier soft-margin decision rule parameterized by safe threshold $\tau_{safe} = 1.30$ and anomaly threshold $\tau_{anom} = 2.50$:
+\begin{equation}
+    \text{Decision}(\mathbf{v}) = 
+    \begin{cases}
+        \text{SAFE}, & \text{if } \text{LOF}(\mathbf{v}) \le \tau_{safe} \quad (\text{Pass to LLM Context}) \\
+        \text{BORDERLINE}, & \text{if } \tau_{safe} < \text{LOF}(\mathbf{v}) < \tau_{anom} \quad (\text{Route to Stage 2 ModernBERT}) \\
+        \text{QUARANTINE}, & \text{if } \text{LOF}(\mathbf{v}) \ge \tau_{anom} \quad (\text{Drop Vector \& Trigger Self-Healing})
+    \end{cases}
+\end{equation}
+
+By handling $> 85\%$ of normal corporate queries in the deterministic $\text{SAFE}$ band, the system achieves an average Stage 1 latency of **$1.82$\,ms**, satisfying ultra-low-latency production constraints.

@@ -1,0 +1,236 @@
+% AMRITA UNIVERSITY B.TECH THESIS TEMPLATE - AIDS TEAM 14 %
+\documentclass[a4paper, 12pt]{report}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{bold-extra}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[english]{babel}
+\usepackage[autostyle, english=american]{csquotes}
+\MakeOuterQuote{"}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{amsthm}
+\usepackage{array}
+\usepackage{cite}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{titletoc}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\theoremstyle{definition}
+\newtheorem{Definition}{Definition}[section]
+
+%-------------------------------------------------------------
+% Title Page
+\begin{document}
+	\pagenumbering{gobble}
+	\thispagestyle{empty}
+	\begin{large}
+		\begin{center}
+			{\Large\bfseries{REAL-TIME TOPOGRAPHIC ANOMALY DETECTION AND STATEFUL SEMANTIC GUARDRAILS IN HIGH-DIMENSIONAL EMBEDDING SPACES FOR SECURE AGENTIC RAG}}\\
+			\vspace{1.0cm}
+			A Project Thesis \\
+			\vspace{.1cm}
+			Submitted in partial fulfilment for the Degree of\\
+			\vspace{.1cm}
+			BACHELOR OF TECHNOLOGY\\
+			\vspace{.1cm}
+            in \\
+            ARTIFICIAL INTELLIGENCE AND DATA SCIENCE \\
+			\vspace{0.8cm}
+			by\\ \vspace{0.2cm}
+			{\large\bfseries{VIGNESH V S (cb.ai.u4aid23057)}} \\ 
+            {\large\bfseries{KARTHICK RUBAN T (cb.ai.u4aid23017)}} \\
+            {\large\bfseries{SANJAY SENTHIL (cb.ai.u4aid23042)}} \\
+            {\large\bfseries{HARI PRAKASH V (cb.ai.u4aid23047)}} \\
+            \vspace{1.5cm}
+			
+			\includegraphics[scale=0.65]{univA.png}\\
+			\vfill
+			DEPARTMENT OF ARTIFICIAL INTELLIGENCE\\
+			\Large{\textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+			{\large COIMBATORE CAMPUS (INDIA)}\\
+			\vspace*{.3cm}
+			October 2026
+		\end{center}
+	\end{large}
+
+	%------------------------------------------------------------------------------------
+	% Bonafide Certificate
+	\newpage
+	\begin{center}
+		{\large DEPARTMENT OF ARTIFICIAL INTELLIGENCE}\\
+		\Large{ \textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+		{\large COIMBATORE CAMPUS}\\
+		\vspace*{1.5cm}
+		\includegraphics[scale=0.65]{univA.png}\\
+		\vspace*{1.0cm}
+		{\Large \textbf{BONAFIDE CERTIFICATE}}
+	\end{center}
+	\vspace*{.5cm}
+	\noindent This is to certify that the project thesis entitled \enquote{\textbf{Real-Time Topographic Anomaly Detection and Stateful Semantic Guardrails in High-Dimensional Embedding Spaces for Secure Agentic RAG}} submitted by \textbf{Vignesh V S (Reg. No: cb.ai.u4aid23057)}, \textbf{Karthick Ruban T (Reg. No: cb.ai.u4aid23017)}, \textbf{Sanjay Senthil (Reg. No: cb.ai.u4aid23042)} and \textbf{Hari Prakash V (Reg. No: cb.ai.u4aid23047)} for the award of the \textbf{Degree of Bachelor of Technology} in \textbf{Artificial Intelligence and Data Science} under the \textbf{Faculty of Engineering} is a bonafide record of the work carried out by them under my guidance and supervision at the Department of Artificial Intelligence, Amrita Vishwa Vidyapeetham, Coimbatore Campus.\\
+	
+    \vfill
+    Submitted for the examination held on \dots\dots\dots\dots\dots\dots\dots\dots
+    \vfill
+    \noindent \textbf{INTERNAL EXAMINER} \hfill \textbf{EXTERNAL EXAMINER}
+    \vfill
+\begin{center}
+	\textbf{Dr. Lekshmi C. R.}\\
+	Thesis Advisor \& Project Supervisor,\\
+	Assistant Professor,\\
+	Department of Artificial Intelligence,\\
+	Amrita Vishwa Vidyapeetham,\\
+	Coimbatore Campus, India.
+\end{center}
+
+	%-------------------------------------------------------------------------------
+	% Declaration Page
+	\newpage
+	\begin{center}
+	{\large DEPARTMENT OF ARTIFICIAL INTELLIGENCE}\\
+	\Large{ \textbf{AMRITA VISHWA VIDYAPEETHAM}}\\
+	{\large COIMBATORE CAMPUS}\\
+	\vspace*{2.0cm}
+	\large {\textbf{DECLARATION}}
+	\vspace*{.3cm}
+	\end{center}
+	
+	\noindent We, \textbf{Vignesh V S} (Reg. No: cb.ai.u4aid23057), \textbf{Karthick Ruban T} (Reg. No: cb.ai.u4aid23017), \textbf{Sanjay Senthil} (Reg. No: cb.ai.u4aid23042) and \textbf{Hari Prakash V} (Reg. No: cb.ai.u4aid23047) hereby declare that this thesis entitled \enquote{\textbf{Real-Time Topographic Anomaly Detection and Stateful Semantic Guardrails in High-Dimensional Embedding Spaces for Secure Agentic RAG}} is the record of original work done by us under the guidance of \textbf{Dr. Lekshmi C. R.}, Assistant Professor, Department of Artificial Intelligence, Amrita Vishwa Vidyapeetham, Coimbatore Campus. To the best of our knowledge, this work has not formed the basis for the award of any degree, diploma, associateship, fellowship, or other similar title to any candidate in any University.\\\\
+	
+	\vspace*{1cm}
+	\noindent{\bf Place: Coimbatore \hfill Signature of the Students} \\
+	\noindent {\bf Date: 25-10-2026}
+	\vfill
+	\begin{center}
+		\large{COUNTERSIGNED}\\
+	\end{center}
+	\vspace{0.4in}
+	
+\begin{center}
+	\textbf{Dr. K. P. Soman}\\
+	Professor and Dean, \\ 
+	School of Artificial Intelligence, \\ 
+	Amrita Vishwa Vidyapeetham,\\
+	Coimbatore Campus, India.
+\end{center}
+	
+	%-----------------------------------------------------------------------------
+	\clearpage
+	\pagenumbering{roman}
+	\tableofcontents
+	
+	\chapter*{Acknowledgements}
+	\addcontentsline{toc}{chapter}{Acknowledgements}	
+	We express our deep sense of gratitude and sincere indebtedness to our esteemed project supervisor, \textbf{Dr. Lekshmi C. R.}, Assistant Professor, Department of Artificial Intelligence, for her insightful mentorship, technical foresight, and constant encouragement throughout this research. Her critical evaluation and guidance in mathematical formulations and system modeling significantly elevated the quality of this work.
+	
+	We extend our profound respects to \textbf{Dr. K. P. Soman}, Professor and Dean, School of Artificial Intelligence, for fostering an exceptional research ecosystem and providing access to high-performance computing infrastructure, including NVIDIA A100 GPU clusters.
+	
+	We also thank all faculty members, technical laboratory coordinators, and our peers at Amrita Vishwa Vidyapeetham, Coimbatore, for their direct and indirect support during the design, implementation, and empirical validation of Vector-Shield.
+	\vspace{1cm}
+	\begin{flushright}
+		\textbf{VIGNESH V S (cb.ai.u4aid23057)}\\
+		\textbf{KARTHICK RUBAN T (cb.ai.u4aid23017)}\\
+		\textbf{SANJAY SENTHIL (cb.ai.u4aid23042)}\\
+		\textbf{HARI PRAKASH V (cb.ai.u4aid23047)}
+	\end{flushright}
+
+	\listoffigures
+	\addcontentsline{toc}{chapter}{List of figures}
+	\listoftables
+	\addcontentsline{toc}{chapter}{List of tables}
+	\newpage
+
+\section*{{\huge Abbreviations}\hfill} \addcontentsline{toc}{chapter}{\textbf{Abbreviations}}
+\vspace{1.2cm}
+\begin{tabular}{lll}
+RAG ~~~~&--&~~~~ Retrieval-Augmented Generation \\
+IPI ~~~~&--&~~~~ Indirect Prompt Injection \\
+LOF ~~~~&--&~~~~ Local Outlier Factor \\
+PCA ~~~~&--&~~~~ Principal Component Analysis \\
+k-NN ~~~~&--&~~~~ k-Nearest Neighbors \\
+LLM ~~~~&--&~~~~ Large Language Model \\
+SIEM ~~~~&--&~~~~ Security Information and Event Management \\
+NLP ~~~~&--&~~~~ Natural Language Processing \\
+FP16 ~~~~&--&~~~~ Half-Precision Floating Point (16-bit) \\
+BERT ~~~~&--&~~~~ Bidirectional Encoder Representations from Transformers \\
+MTEB ~~~~&--&~~~~ Massive Text Embedding Benchmark \\
+SOC ~~~~&--&~~~~ Security Operations Center \\
+\end{tabular}	
+\newpage
+
+\section*{{\huge List of symbols}\hfill} \addcontentsline{toc}{chapter}{\textbf{List of symbols}}
+\vspace{1.2cm}
+\begin{tabular}{lll}
+$\mathbf{v}_i \in \mathbb{R}^d$ ~~~~&--&~~~~ High-dimensional embedding vector of document chunk $i$ \\
+$\mathcal{D}_{clean}$ ~~~~&--&~~~~ Manifold of authenticated enterprise clean document vectors \\
+$d(\mathbf{p}, \mathbf{q})$ ~~~~&--&~~~~ Cosine distance metric between vectors $\mathbf{p}$ and $\mathbf{q}$ \\
+$N_k(\mathbf{p})$ ~~~~&--&~~~~ $k$-nearest neighborhood set of point $\mathbf{p}$ \\
+$k\text{-distance}(\mathbf{p})$ ~~~~&--&~~~~ Distance from $\mathbf{p}$ to its $k$-th nearest neighbor \\
+$\text{reach-dist}_k(\mathbf{p}, \mathbf{o})$ ~~~~&--&~~~~ Reachability distance between point $\mathbf{p}$ and object $\mathbf{o}$ \\
+$\text{lrd}_k(\mathbf{p})$ ~~~~&--&~~~~ Local reachability density of point $\mathbf{p}$ \\
+$\text{LOF}_k(\mathbf{p})$ ~~~~&--&~~~~ Local Outlier Factor score of point $\mathbf{p}$ \\
+$\tau_{safe}$ ~~~~&--&~~~~ Safe threshold ceiling for Stage 1 pass-through ($\tau_{safe} = 1.30$) \\
+$\tau_{anom}$ ~~~~&--&~~~~ Outlier threshold floor for Stage 1 quarantine ($\tau_{anom} = 2.50$) \\
+$\mathcal{G} = (\mathcal{V}, \mathcal{E})$ ~~~~&--&~~~~ Stateful cyclic computational graph in LangGraph \\
+\end{tabular}
+\newpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Enterprise deployment of Autonomous Agentic Retrieval-Augmented Generation (RAG) is critically vulnerable to \textit{Indirect Prompt Injection} (IPI) and vector store poisoning attacks. In these threat models, adversaries embed obfuscated jailbreak instructions within third-party documents (invoices, compliance memos, resumes), causing generative Large Language Models (LLMs) to execute unauthorized privilege escalation, sensitive data exfiltration, or transactional fraud during autonomous retrieval. Existing mitigation paradigms rely on generative evaluator LLMs (e.g., Llama Guard, NeMo Guardrails), which introduce prohibitive inference latencies (800\,ms--2500\,ms per retrieval step), substantial token costs, and rigid exception halting that disrupts mission-critical business automation.
+
+To resolve this dilemma, this thesis introduces \textbf{Vector-Shield}: a dual-stage, hybrid Neuro-Symbolic middleware defense framework operating directly on multi-dimensional vector arrays prior to prompt synthesis. \textbf{Stage 1 (Symbolic Tier)} deploys an angularly calibrated Local Outlier Factor (LOF) formulation coupled with adaptive Principal Component Analysis (PCA) dimensionality reduction, performing deterministic geometric spatial density scoring in sub-2ms ($1.82$\,ms average). Normal enterprise retrievals ($\text{LOF} \le 1.30$) are passed through with zero generative overhead, while severe topographic anomalies ($\text{LOF} \ge 2.50$) are quarantined immediately.
+
+For stealthy borderline candidates ($1.30 < \text{LOF} < 2.50$), \textbf{Stage 2 (Neural Tier)} invokes a domain fine-tuned \textit{ModernBERT-base} transformer encoder (149M parameters, 8192-token context window). Fine-tuned on an NVIDIA A100 80GB GPU cluster with mixed precision (FP16), the Stage 2 classifier achieves $100.00\%$ validation accuracy and $100.00\%$ F1-score across real adversarial benchmarks from NVIDIA Garak and HuggingFace prompt injections.
+
+Furthermore, Vector-Shield integrates a stateful cyclic self-healing recovery loop orchestrated by \textit{LangGraph}. When an injection vector is intercepted, Vector-Shield dynamically purges the compromised document ID, rolls back agent state, re-retrieves alternative legitimate context, and emits real-time SIEM alerts without terminating the user transaction. Empirical validation across scaled enterprise corpora confirms $100\%$ outlier attack recall, $100\%$ borderline routing, and sub-2ms Stage 1 execution latency, proving that vector-space geometric defense provides a robust, real-time foundation for enterprise agentic security.
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\chapter{Introduction}
+\input{introduction}
+
+\chapter{Literature Review \& Related Work}
+\input{chapter2}
+
+\chapter{Threat Modeling \& Problem Formulation}
+\input{chapter3}
+
+\chapter{Stage 1: Symbolic Geometric Interceptor}
+\input{chapter4} 
+
+\chapter{Stage 2: ModernBERT Neural Sequence Classifier}
+\input{chapter5}
+
+\chapter{Stateful Self-Healing Orchestration with LangGraph}
+\input{chapter6}
+
+\chapter{Empirical Results, Evaluation \& Security Cockpit}
+\input{chapter7}
+
+\chapter{Conclusion and Scope for Further Research}
+\input{conclusion}
+
+\appendix
+\chapter{Implementation Details and System Verification}
+\input{appendix}
+
+\newpage
+\renewcommand{\bibname}{References}
+\bibliographystyle{ieeetr}
+\addcontentsline{toc}{chapter}{References}
+\bibliography{mybib}
+
+\chapter*{List of Publications \\ \large(Based on the Research Work)}
+\addcontentsline{toc}{chapter}{List of Publications Based on the Research Work}
+\textbf{\Large Papers Communicated}
+\begin{enumerate}
+	\item \textbf{Vignesh V S}, Karthick Ruban T, Sanjay Senthil, Hari Prakash V, and Dr. Lekshmi C R, \enquote{Vector-Shield: Real-Time Topographic Anomaly Detection and Stateful Semantic Guardrails in High-Dimensional Embedding Spaces for Secure Agentic RAG,} \textit{Communicated to IEEE Transactions on Dependable and Secure Computing (TDSC)}, October 2026.
+\end{enumerate}
+
+\end{document}
