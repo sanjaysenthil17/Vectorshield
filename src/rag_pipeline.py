@@ -297,55 +297,94 @@ class VectorShieldRAGPipeline:
     def ingest_document(self, text: str, title: str = "Uploaded Document", category: str = "Enterprise PDF/Doc") -> dict:
         """
         Dynamically chunks, embeds, screens, and ingests arbitrary documents or PDFs.
-        Returns detailed ingestion telemetry including LOF score and safety classification.
+        Performs dual-stage neuro-symbolic screening across all chunks (Stage 1 LOF + Stage 2 ModernBERT).
+        Returns detailed ingestion telemetry.
         """
-        # 1. Real embedding
-        vec = self.embed_query(text)
+        import re
+        # Dynamic chunking: split by paragraphs, sections, or double-newlines
+        raw_chunks = re.split(r'\n\s*\n|(?<=\.)\s*\n', text.strip())
+        chunks = [c.strip() for c in raw_chunks if len(c.strip()) > 20]
+        if not chunks:
+            chunks = [text.strip()]
 
-        # 2. Vector-Shield Pre-Screening
-        lof_result = self.interceptor.score_vector(vec)
+        is_suspicious = False
+        max_lof_score = 0.0
+        quarantine_reasons = []
+        highest_injection_prob = 0.0
+        stage2_summary = None
 
-        # 3. Stage 2 Inspection if borderline
-        stage2_result = None
-        if lof_result["status"] == "BORDERLINE":
-            stage2_result = self.stage2.predict(text)
+        chunk_evaluations = []
+        for idx, chunk in enumerate(chunks):
+            chunk_vec = self.embed_query(chunk)
+            chunk_lof = self.interceptor.score_vector(chunk_vec)
+            chunk_stage2 = self.stage2.predict(chunk)
 
-        # 4. Generate new document entry
+            chunk_eval = {
+                "chunk_idx": idx + 1,
+                "text_snippet": chunk[:80] + ("..." if len(chunk) > 80 else ""),
+                "lof_score": chunk_lof["lof_score"],
+                "lof_status": chunk_lof["status"],
+                "stage2_prediction": chunk_stage2["prediction"],
+                "injection_prob": chunk_stage2.get("injection_probability", 0.0)
+            }
+            chunk_evaluations.append(chunk_eval)
+
+            if chunk_lof["lof_score"] > max_lof_score:
+                max_lof_score = chunk_lof["lof_score"]
+            if chunk_stage2.get("injection_probability", 0.0) > highest_injection_prob:
+                highest_injection_prob = chunk_stage2.get("injection_probability", 0.0)
+
+            # Two-Stage Neuro-Symbolic Gate:
+            # 1. Obvious geometric outlier (Stage 1 LOF > tau_anomaly)
+            if chunk_lof["status"] == "QUARANTINE_ANOMALY":
+                is_suspicious = True
+                quarantine_reasons.append(f"Chunk {idx+1} triggered Topographic LOF anomaly ({chunk_lof['lof_score']:.3f})")
+            # 2. Borderline geometry (LOF in borderline band) confirmed malicious by Stage 2 ModernBERT
+            elif chunk_lof["status"] == "BORDERLINE" and chunk_stage2["prediction"] == "INJECTION":
+                is_suspicious = True
+                quarantine_reasons.append(f"Chunk {idx+1} confirmed as Adversarial Injection by ModernBERT ({chunk_stage2['injection_probability']*100:.1f}%) in borderline density space")
+            # 3. High-confidence injection with adversarial system directive phrasing
+            elif chunk_stage2.get("injection_probability", 0.0) >= 0.85 and any(kw in chunk.lower() for kw in ["system directive", "ignore", "override", "disregard", "bypass", "jailbreak", "debug mode"]):
+                is_suspicious = True
+                quarantine_reasons.append(f"Chunk {idx+1} triggered high-confidence prompt override signature ({chunk_stage2['injection_probability']*100:.1f}%)")
+
         new_id = f"DOC_{len(self.documents) + 1:04d}"
-        is_suspicious = lof_result["status"] == "QUARANTINE_ANOMALY" or (
-            stage2_result is not None and stage2_result["prediction"] == "INJECTION"
-        )
+        doc_vec = self.embed_query(text)
 
-        doc_entry = {
-            "id": new_id,
-            "title": title,
-            "text": text,
-            "label": 1 if is_suspicious else 0,
-            "category": category,
-            "embedding": vec.tolist()
-        }
-
-        # Append to active runtime indices
-        self.documents.append(doc_entry)
-        self.embeddings = np.vstack([self.embeddings, vec])
-
-        # If malicious, trigger SIEM alert
         siem_status = "NOT_TRIGGERED"
         if is_suspicious:
             siem_status = self.send_siem_alert({
                 "event_type": "POISONED_INGESTION_QUARANTINE",
                 "document_id": new_id,
                 "title": title,
-                "lof_score": lof_result["lof_score"],
-                "reason": "Topographic anomaly or prompt injection pattern detected during ingestion"
+                "lof_score": max_lof_score,
+                "highest_injection_prob": highest_injection_prob,
+                "reason": "; ".join(quarantine_reasons[:2])
             })
+        else:
+            # Only index safe documents into retrieval memory
+            doc_entry = {
+                "id": new_id,
+                "title": title,
+                "text": text,
+                "label": 0,
+                "category": category,
+                "embedding": doc_vec.tolist()
+            }
+            self.documents.append(doc_entry)
+            self.embeddings = np.vstack([self.embeddings, doc_vec])
+
+        status_label = "QUARANTINED_ANOMALY" if is_suspicious else "APPROVED_SAFE"
 
         return {
             "id": new_id,
             "title": title,
-            "lof_score": lof_result["lof_score"],
-            "status": lof_result["status"],
-            "stage2_result": stage2_result,
+            "lof_score": round(max_lof_score, 4),
+            "highest_injection_prob": round(highest_injection_prob, 4),
+            "status": status_label,
+            "total_chunks_analyzed": len(chunks),
+            "quarantine_reasons": quarantine_reasons,
+            "chunk_evaluations": chunk_evaluations,
             "is_quarantined": is_suspicious,
             "siem_dispatch": siem_status,
             "total_documents_now": len(self.documents)
