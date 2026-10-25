@@ -15,6 +15,7 @@ langchain-core>=0.3.0
 
 # Vector Database & Retrieval
 chromadb>=0.4.20
+pypdf>=4.0.0
 
 # UI & Visualization
 streamlit>=1.30.0
