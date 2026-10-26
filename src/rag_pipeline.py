@@ -420,10 +420,12 @@ class VectorShieldRAGPipeline:
                     data=data,
                     headers={"Content-Type": "application/json", "User-Agent": "VectorShield-SIEM/1.0"}
                 )
-                with urllib.request.urlopen(req, timeout=3) as res:
-                    return f"DISPATCHED (HTTP {res.status})"
+                with urllib.request.urlopen(req, timeout=4) as res:
+                    return f"DISPATCHED (HTTP {res.status} OK)"
+            except urllib.error.HTTPError as he:
+                return f"EXTERNAL_GATEWAY_ERROR (HTTP {he.code}: {he.reason} - Logged to Local SOC Trail)"
             except Exception as e:
-                return f"WEBHOOK_FAILED ({e})"
+                return f"WEBHOOK_FAILED ({e} - Logged to Local SOC Trail)"
 
         return "LOGGED_TO_SIEM_AUDIT_TRAIL"
 

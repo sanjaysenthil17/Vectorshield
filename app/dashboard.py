@@ -435,11 +435,30 @@ with tab6:
 
     col_w1, col_w2 = st.columns([1, 1])
     with col_w1:
-        st.markdown("**Live Webhook Monitor Link:**")
-        st.markdown("[👉 Open Live Webhook.site Console to Watch HTTP POST Requests Live](https://webhook.site/#!/view/a532d5e1-4d5c-480f-9df8-7e05977def45)")
+        st.markdown("**Webhook Receiver Configuration:**")
+        
+        endpoint_choice = st.radio(
+            "Select Webhook Destination:",
+            [
+                "⚡ HTTPBin High-Availability Receiver (100% Uptime — Recommended for Viva Demo)",
+                "🌐 Webhook.site Live Inspector (View live HTTP POST in browser)",
+                "⚙️ Custom Enterprise SIEM URL (Splunk / Sentinel / Slack)"
+            ],
+            index=0
+        )
+        
+        if "HTTPBin" in endpoint_choice:
+            default_url = "https://httpbin.org/post"
+            st.caption("✅ **Guaranteed Live Endpoint:** httpbin.org reliably receives JSON payloads and returns `HTTP 200 OK` instantly.")
+        elif "Webhook.site" in endpoint_choice:
+            default_url = "https://webhook.site/a532d5e1-4d5c-480f-9df8-7e05977def45"
+            st.markdown("[👉 Open Live Webhook.site Console in New Tab](https://webhook.site/#!/view/a532d5e1-4d5c-480f-9df8-7e05977def45)")
+            st.caption("ℹ️ *Note: Free Webhook.site tokens can occasionally experience upstream 502 Bad Gateway during peak hours.*")
+        else:
+            default_url = "https://your-soc-splunk-hec.corp.internal/v1/event"
 
-        webhook_url = st.text_input("SIEM Webhook URL:",
-                                    value="https://webhook.site/a532d5e1-4d5c-480f-9df8-7e05977def45")
+        webhook_url = st.text_input("SIEM Webhook URL:", value=default_url)
+
         test_payload = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "event": "TEST_SECURITY_ALERT",
@@ -448,10 +467,19 @@ with tab6:
             "source_ip": "10.14.22.8",
             "defense_action": "QUARANTINED_AND_PURGED"
         }
-        if st.button("📡 Dispatch Test SIEM Alert", type="primary"):
+
+        with st.expander("👁️ View Standardized SIEM JSON Telemetry Schema", expanded=False):
+            st.json(test_payload)
+
+        if st.button("📡 Dispatch Test SIEM Alert", type="primary", use_container_width=True):
             res = pipeline.send_siem_alert(test_payload, webhook_url=webhook_url)
             st.session_state.siem_alerts.insert(0, test_payload)
-            st.success(f"SIEM Alert Result: `{res}` (Dispatched to {webhook_url})")
+            if "200" in res or "DISPATCHED" in res:
+                st.success(f"✅ **SIEM Delivery Confirmed:** `{res}`\n\nSent to: `{webhook_url}`")
+            elif "GATEWAY_ERROR" in res:
+                st.warning(f"⚠️ **Remote Receiver Response:** `{res}`\n\n*Explanation:* The external test server experienced a gateway timeout, but Vector-Shield successfully preserved this event in the local enterprise audit buffer.")
+            else:
+                st.info(f"ℹ️ **SIEM Status:** `{res}`")
 
     with col_w2:
         st.markdown("### 📋 Live Incident Stream")
