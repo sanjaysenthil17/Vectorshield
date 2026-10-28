@@ -102,7 +102,7 @@ Vector-Shield is evaluated against **100% genuine, non-simulated threat and know
 
 Deploy Vector-Shield as a live, publicly accessible website for free in 3 clicks:
 1. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/) with your GitHub account (`VigneshVS2005`).
-2. Click **"New app"** → Select Repository: `VigneshVS2005/Vectorshield`, Branch: `main`, Main file path: `app/dashboard.py`.
+2. Click **"New app"** → Select Repository: `sanjaysenthil17/Vectorshield`, Branch: `main`, Main file path: `app/dashboard.py`.
 3. Set your App URL (e.g. `https://vectorshield.streamlit.app`) and click **Deploy**.
 Your live interactive 3D WebGL security cockpit is now accessible worldwide!
 
@@ -113,7 +113,7 @@ Your live interactive 3D WebGL security cockpit is now accessible worldwide!
 ### 1. Installation
 ```bash
 # Clone repository
-git clone https://github.com/VigneshVS2005/Vectorshield.git
+git clone https://github.com/sanjaysenthil17/Vectorshield.git
 cd Vectorshield
 
 # Install dependencies
